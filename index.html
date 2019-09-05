@@ -1,0 +1,99 @@
+<html>
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <!-- 引入组件库 -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <el-container>
+      <el-header>
+        <h3>广播窗口</h3>
+      </el-header>
+
+      <el-main>
+        <div class="block" style="height:500px; width:50%; overflow:auto">
+          <el-timeline>
+            <el-timeline-item v-for="(item, index) in list" :key="index" color="#0bbd87" :timestamp="item.time_str">
+              <el-card style="height: 40px;" shadow="hover">
+                  <div slot="header" class="clearfix" tyle="height:100%">
+                      <span>{{item.text}}</span>
+                  </div>
+              </el-card>
+            </el-timeline-item>
+          </el-timeline>
+        </div>
+
+      </el-main>
+
+      <el-footer>
+        <el-col :span="11">
+          <el-input v-model="message"></el-input>
+        </el-col>
+        <el-button type="info" @click="send" plain  style="margin-left: 20px">发送消息</el-button>
+        <el-button type="info" @click="clear" plain>清空消息</el-button>
+      </el-footer>
+    </el-container>
+
+
+  </div>
+
+  <script>
+    Date.prototype.Format = function (fmt) { //author: meizz   
+      var o = {
+        "M+": this.getMonth() + 1,                 //月份   
+        "d+": this.getDate(),                    //日   
+        "h+": this.getHours(),                   //小时   
+        "m+": this.getMinutes(),                 //分   
+        "s+": this.getSeconds(),                 //秒   
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度   
+        "S": this.getMilliseconds()             //毫秒   
+      };
+      if (/(y+)/.test(fmt))
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+      for (var k in o)
+        if (new RegExp("(" + k + ")").test(fmt))
+          fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+      return fmt;
+    };
+
+    var socket = io();
+    var app = new Vue({
+      el: '#app',
+      data: {
+        list: [],
+        message: 'Hello Vue!',
+        load: ''
+      },
+      methods: {
+        send: function () {
+          console.log(socket);
+          // this.list.push(this.message);
+          socket.emit('chat message', this.message);
+
+          this.message = '';
+        },
+        clear: function () {
+          this.list = []
+        }
+      },
+
+      mounted: function () {
+        // 回调函数里面使用this时候，注意指向，尽量使用箭头函数
+
+        socket.on('chat message', text => {
+          time_str = new Date().Format('yyyy-MM-dd hh:mm:ss');
+          this.list.push({ text, time_str });
+        });
+      }
+
+    })
+  </script>
+</body>
+
+</html>
